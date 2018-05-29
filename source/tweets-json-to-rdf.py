@@ -6,10 +6,11 @@ __author__ = "Abdurrahman Ghanem"
 
 
 import rdflib as rdf
-from rdflib.namespace import FOAF, DC, RDF
+from rdflib.namespace import FOAF, DC, RDF, XSD
 import json
 import os
 import sys
+from datetime import datetime
 
 
 SIOC = rdf.Namespace('http://rdfs.org/sioc/ns#')
@@ -79,6 +80,7 @@ class twitter_json_to_rdf(object):
             self.add_triple_to_graph(tweet_uri, DCTERMS.references, retweet_tweet)
 
         created_at = self.read_key_from_dict(tweet_dict, "created_at")
+        cdate = self.create_datetime(created_at)
 
         self.add_triple_to_graph(tweet_uri, SIOC.type, SIOC.microblogPost)
         self.add_literal_to_subject(tweet_uri, SIOC.id, tweet_id)
@@ -102,7 +104,7 @@ class twitter_json_to_rdf(object):
         self.add_literal_to_subject(tweet_uri, DCTERMS.language, lang)
         self.add_literal_to_subject(tweet_uri, GN.locatedIn, location)
         self.add_literal_to_subject(tweet_uri, SEAS.device, device)
-        self.add_literal_to_subject(tweet_uri, DCTERMS.created, created_at)
+        self.add_literal_to_subject(tweet_uri, DCTERMS.created, self.get_rdf_datetime(cdate), datatype=XSD.datetime)
 
     def extract_twitter(self, tweet):
         user_dict = self.read_key_from_dict(tweet, "user")
@@ -118,6 +120,7 @@ class twitter_json_to_rdf(object):
             location = self.read_key_from_dict(user_dict, "location")
             main_lang = self.read_key_from_dict(user_dict, "lang")
             created_at = self.read_key_from_dict(user_dict, "created_at")
+            cdate = self.create_datetime(created_at)
 
             if screen_name is not None:
                 user = self.get_twitter_uri(user_dict)
@@ -131,7 +134,7 @@ class twitter_json_to_rdf(object):
                 self.add_literal_to_subject(user, SIOC.description, description)
                 self.add_literal_to_subject(user, GN.locatedIn, location)
                 self.add_literal_to_subject(user, DCTERMS.language, main_lang)
-                self.add_literal_to_subject(user, DCTERMS.created_at, created_at)
+                self.add_literal_to_subject(user, DCTERMS.created, self.get_rdf_datetime(cdate), datatype=XSD.datetime)
 
                 ver_val = "verified" if verified else "not verified"
                 self.add_literal_to_subject(user, SIOC.has_group, ver_val)
@@ -152,12 +155,18 @@ class twitter_json_to_rdf(object):
             for obj in objs:
                 self.graph.set((subj, pred, obj))
 
-    def add_literal_to_subject(self, subj, pred, value, lang="en"):
+    def add_literal_to_subject(self, subj, pred, value, lang=None, datatype=None):
         if value is not None:
             if not isinstance(value, str) or len(value) > 0:
-                self.add_triple_to_graph(subj, pred, rdf.Literal(value, lang=lang))
+                if datatype is not None:
+                    literal = rdf.Literal(value, datatype=datatype)
+                elif lang is not None:
+                    literal = rdf.Literal(value, lang=lang)
+                else:
+                    literal = rdf.Literal(value)
+                self.add_triple_to_graph(subj, pred, literal)
 
-    def add_literals_to_subject(self, subj, pred, values, lang="en"):
+    def add_literals_to_subject(self, subj, pred, values, lang=None):
         if values is not None and hasattr(values, "__len__"):
             for value in values:
                 self.add_literal_to_subject(subj, pred, value, lang=lang)
@@ -208,6 +217,14 @@ class twitter_json_to_rdf(object):
             return dict[key]
         if is_sequence:
             return []
+
+    def create_datetime(self, dtstring):
+        if dtstring is not None:
+            return datetime.strptime(dtstring, '%a %b %d %H:%M:%S %z %Y')
+
+    def get_rdf_datetime(self, dt):
+        if dt is not None:
+            return dt.strftime('%Y-%m-%dT%H:%M:%S')
 
     def __del__(self):
         if self.tweets_file is not None:

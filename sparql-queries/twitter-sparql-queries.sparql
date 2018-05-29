@@ -1,0 +1,88 @@
+//Tweets histogram. Count of tweets aggregated hourly
+SPARQL
+PREFIX sioc: <http://rdfs.org/sioc/ns#>
+PREFIX dcterms: <http://purl.org/dc/terms/>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+SELECT (year(xsd:dateTime( str(?cdate))) AS ?y) (month(xsd:dateTime( str(?cdate))) AS ?m) (day(xsd:dateTime( str(?cdate))) AS ?d) (hours(xsd:dateTime( str(?cdate))) AS ?h) COUNT(?tweet)
+WHERE 
+{
+GRAPH <http://twitter.com/>
+{
+?tweet sioc:type sioc:microblogPost ;
+dcterms:created ?cdate .
+}
+}
+ORDER BY ?y ?m ?d ?h;
+
+
+//Get hashtag counts grouped by day & hashtag
+SPARQL
+PREFIX sioc: <http://rdfs.org/sioc/ns#>
+PREFIX sto:	<https://w3id.org/i40/sto#>
+PREFIX dcterms: <http://purl.org/dc/terms/>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+SELECT year(?cdate), month(?cdate), day(?cdate), COUNT(?hashtag)
+WHERE 
+{
+GRAPH <http://twitter.com/>
+{
+?tweet sioc:type sioc:microblogPost ;
+dcterms:created ?cdate ;
+sto:hasTag ?hashtag .
+}
+}
+GROUP BY xsd:nonNegativeInteger(year(?cdate)) xsd:nonNegativeInteger(month(?cdate)) xsd:nonNegativeInteger(day(?cdate));
+
+
+//top 10 retweeted accounts
+SPARQL
+PREFIX sioc: <http://rdfs.org/sioc/ns#>
+PREFIX dcterms: <http://purl.org/dc/terms/>
+SELECT ?twitter, (COUNT(?reftweet) as ?tweets_count)
+WHERE 
+{
+GRAPH <http://twitter.com/>
+{
+?tweet sioc:type sioc:microblogPost ;
+dcterms:references ?reftweet .
+?reftweet sioc:has_creator ?twitter .
+}
+}
+ORDER BY DESC(?tweets_count) LIMIT 10;
+
+
+//top 10 mentioned accounts
+SPARQL
+PREFIX sioc: <http://rdfs.org/sioc/ns#>
+SELECT ?mentioned (COUNT(?tweet) as ?men_tweet)
+WHERE 
+{
+GRAPH <http://twitter.com/>
+{
+?tweet sioc:type sioc:microblogPost ;
+sioc:mentions ?mentioned .
+}
+}
+ORDER BY DESC(?men_tweet) LIMIT 10;
+
+
+//top 10 hashtags
+SPARQL
+PREFIX sioc: <http://rdfs.org/sioc/ns#>
+PREFIX sto:	<https://w3id.org/i40/sto#>
+SELECT ?hashtag (COUNT(?hashtag) as ?hashtags_count)
+WHERE 
+{
+GRAPH <http://twitter.com/>
+{
+?tweet sioc:type sioc:microblogPost ;
+sto:hasTag ?hashtag .
+}
+}
+ORDER BY DESC(?hashtags_count) LIMIT 10;
+
+
+
+
+
+

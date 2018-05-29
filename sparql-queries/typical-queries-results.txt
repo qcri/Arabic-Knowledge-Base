@@ -1,0 +1,104 @@
+//top 10 retweeted accounts
+SPARQL
+PREFIX sioc: <http://rdfs.org/sioc/ns#>
+PREFIX dcterms: <http://purl.org/dc/terms/>
+SELECT ?twitter, (COUNT(?reftweet) as ?tweets_count)
+WHERE 
+{
+GRAPH <http://twitter.com/>
+{
+?tweet sioc:type sioc:microblogPost ;
+dcterms:references ?reftweet .
+?reftweet sioc:has_creator ?twitter .
+}
+}
+ORDER BY DESC(?tweets_count) LIMIT 10;
+
+Result:
+twitter                                                                           tweets_count
+LONG VARCHAR                                                                      LONG VARCHAR
+_______________________________________________________________________________
+
+http://twitter.com/fdeet_alnssr/                                                  41990
+http://twitter.com/hassanalishaq73/                                               30348
+http://twitter.com/Alkhaldi990990/                                                28060
+http://twitter.com/A_AlAthbah/                                                    27028
+http://twitter.com/Alrad3sa/                                                      23786
+http://twitter.com/saudq1978/                                                     23765
+http://twitter.com/meshaluk/                                                      22221
+http://twitter.com/AdelAliBinAli/                                                 21861
+http://twitter.com/monther72/                                                     21647
+http://twitter.com/khomene11/                                                     18408
+
+10 Rows. -- 60795 msec.
+
+==================================================================================================
+
+//top 10 mentioned accounts
+SPARQL
+PREFIX sioc: <http://rdfs.org/sioc/ns#>
+SELECT ?mentioned (COUNT(?mentioned) as ?mentions)
+WHERE 
+{
+GRAPH <http://twitter.com/>
+{
+?tweet sioc:type sioc:microblogPost ;
+sioc:mentions ?mentioned .
+}
+}
+ORDER BY DESC(?mentions) LIMIT 10;
+
+Result:
+
+mentioned                                                                         men_tweet
+LONG VARCHAR                                                                      LONG VARCHAR
+_______________________________________________________________________________
+
+http://twitter.com/fdeet_alnssr/                                                  46368
+http://twitter.com/TamimBinHamad/                                                 41678
+http://twitter.com/saudq1978/                                                     37734
+http://twitter.com/AJArabic/                                                      36762
+http://twitter.com/hassanalishaq73/                                               35093
+http://twitter.com/A_AlAthbah/                                                    33019
+http://twitter.com/Alkhaldi990990/                                                31899
+http://twitter.com/Turki_alalshikh/                                               28430
+http://twitter.com/meshaluk/                                                      26076
+http://twitter.com/hamadjjalthani/                                                26072
+
+10 Rows. -- 26194 msec.
+
+================================================================================================
+
+//top 10 hashtags
+SPARQL
+PREFIX sioc: <http://rdfs.org/sioc/ns#>
+PREFIX sto:	<https://w3id.org/i40/sto#>
+SELECT ?hashtag (COUNT(?hashtag) as ?hashtags_count)
+WHERE 
+{
+GRAPH <http://twitter.com/>
+{
+?tweet sioc:type sioc:microblogPost ;
+sto:hasTag ?hashtag .
+}
+}
+ORDER BY DESC(?hashtags_count) LIMIT 10;
+
+Result:
+
+hashtag                                                                           hashtags_count
+LONG VARCHAR                                                                      LONG VARCHAR
+_______________________________________________________________________________
+
+قطر                                                                            106663
+السعودية                                                                  44563
+تميم_المجد                                                               14685
+اليمن                                                                        14628
+تنظيم_الحمدين                                                         13818
+إيران                                                                        11969
+الهلال                                                                      11891
+ماخفي_اعظم                                                               11247
+الإمارات                                                                  11081
+محمد_بن_سلمان                                                          10968
+
+10 Rows. -- 15762 msec.
