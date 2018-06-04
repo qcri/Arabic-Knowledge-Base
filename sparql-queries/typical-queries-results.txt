@@ -1,3 +1,76 @@
+//Tweets histogram. Count of tweets aggregated hourly
+SPARQL
+PREFIX sioc: <http://rdfs.org/sioc/ns#>
+PREFIX dcterms: <http://purl.org/dc/terms/>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+SELECT (year(xsd:dateTime( str(?cdate))) AS ?y) (month(xsd:dateTime( str(?cdate))) AS ?m) (day(xsd:dateTime( str(?cdate))) AS ?d) (hours(xsd:dateTime( str(?cdate))) AS ?h) (COUNT(?tweet) AS ?count)
+WHERE 
+{
+GRAPH <http://twitter.com/>
+{
+?tweet sioc:type sioc:microblogPost ;
+dcterms:created ?cdate .
+}
+}
+GROUP BY year(xsd:dateTime( str(?cdate))) month(xsd:dateTime( str(?cdate))) day(xsd:dateTime( str(?cdate))) hours(xsd:dateTime( str(?cdate)))
+ORDER BY DESC(year(xsd:dateTime( str(?cdate)))) DESC(month(xsd:dateTime( str(?cdate)))) DESC(day(xsd:dateTime( str(?cdate)))) DESC(hours(xsd:dateTime( str(?cdate))))
+LIMIT 10;
+
+Result:
+y                                                                                 m                                                                                 d                                                                                 h                                                                                 callret-4
+LONG VARCHAR                                                                      LONG VARCHAR                                                                      LONG VARCHAR                                                                      LONG VARCHAR                                                                      LONG VARCHAR
+_______________________________________________________________________________
+
+2018                                                                              4                                                                                 5                                                                                 8                                                                                 120
+2018                                                                              4                                                                                 5                                                                                 7                                                                                 754
+2018                                                                              4                                                                                 5                                                                                 6                                                                                 1253
+2018                                                                              4                                                                                 5                                                                                 5                                                                                 1200
+2018                                                                              4                                                                                 5                                                                                 4                                                                                 1307
+2018                                                                              4                                                                                 5                                                                                 3                                                                                 1182
+2018                                                                              4                                                                                 5                                                                                 2                                                                                 855
+2018                                                                              4                                                                                 5                                                                                 1                                                                                 780
+2018                                                                              4                                                                                 5                                                                                 0                                                                                 1073
+2018                                                                              4                                                                                 4                                                                                 23                                                                                1616
+
+10 Rows. -- 59880 msec.
+
+=============================================================================================
+
+//Get hashtag counts grouped by day & hashtag
+SPARQL
+PREFIX sioc: <http://rdfs.org/sioc/ns#>
+PREFIX sto:	<https://w3id.org/i40/sto#>
+PREFIX dcterms: <http://purl.org/dc/terms/>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+SELECT (year(xsd:dateTime( str(?cdate))) AS ?y) (month(xsd:dateTime( str(?cdate))) AS ?m) (day(xsd:dateTime( str(?cdate))) AS ?d) ?hashtag (COUNT(?hashtag) AS ?hashtagcount)
+WHERE 
+{
+GRAPH <http://twitter.com/>
+{
+?tweet sioc:type sioc:microblogPost ;
+dcterms:created ?cdate ;
+sto:hasTag ?hashtag .
+}
+}
+GROUP BY year(xsd:dateTime( str(?cdate))) month(xsd:dateTime( str(?cdate))) day(xsd:dateTime( str(?cdate))) ?hashtag
+ORDER BY DESC(year(xsd:dateTime( str(?cdate)))) DESC(month(xsd:dateTime( str(?cdate)))) DESC(day(xsd:dateTime( str(?cdate))))
+LIMIT 5;
+
+Result:
+y                                                                                 m                                                                                 d                                                                                 hashtag                                                                           hashtagcount
+LONG VARCHAR                                                                      LONG VARCHAR                                                                      LONG VARCHAR                                                                      LONG VARCHAR                                                                      LONG VARCHAR
+_______________________________________________________________________________
+
+2018                                                                              4                                                                                 5                                                                                 اليمن                                                                        49
+2018                                                                              4                                                                                 5                                                                                 Iran                                                                              1
+2018                                                                              4                                                                                 5                                                                                 USA                                                                               1
+2018                                                                              4                                                                                 5                                                                                 مصر                                                                            4
+2018                                                                              4                                                                                 5                                                                                 Libya                                                                             1
+
+5 Rows. -- 47295 msec.
+
+=====================================================================================================
+
 //top 10 retweeted accounts
 SPARQL
 PREFIX sioc: <http://rdfs.org/sioc/ns#>

@@ -3,7 +3,7 @@ SPARQL
 PREFIX sioc: <http://rdfs.org/sioc/ns#>
 PREFIX dcterms: <http://purl.org/dc/terms/>
 PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-SELECT (year(xsd:dateTime( str(?cdate))) AS ?y) (month(xsd:dateTime( str(?cdate))) AS ?m) (day(xsd:dateTime( str(?cdate))) AS ?d) (hours(xsd:dateTime( str(?cdate))) AS ?h) COUNT(?tweet)
+SELECT (year(xsd:dateTime( str(?cdate))) AS ?y) (month(xsd:dateTime( str(?cdate))) AS ?m) (day(xsd:dateTime( str(?cdate))) AS ?d) (hours(xsd:dateTime( str(?cdate))) AS ?h) (COUNT(?tweet) AS ?count)
 WHERE 
 {
 GRAPH <http://twitter.com/>
@@ -12,7 +12,9 @@ GRAPH <http://twitter.com/>
 dcterms:created ?cdate .
 }
 }
-ORDER BY ?y ?m ?d ?h;
+GROUP BY year(xsd:dateTime( str(?cdate))) month(xsd:dateTime( str(?cdate))) day(xsd:dateTime( str(?cdate))) hours(xsd:dateTime( str(?cdate)))
+ORDER BY DESC(year(xsd:dateTime( str(?cdate)))) DESC(month(xsd:dateTime( str(?cdate)))) DESC(day(xsd:dateTime( str(?cdate)))) DESC(hours(xsd:dateTime( str(?cdate))))
+LIMIT 10;
 
 
 //Get hashtag counts grouped by day & hashtag
@@ -21,7 +23,7 @@ PREFIX sioc: <http://rdfs.org/sioc/ns#>
 PREFIX sto:	<https://w3id.org/i40/sto#>
 PREFIX dcterms: <http://purl.org/dc/terms/>
 PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-SELECT year(?cdate), month(?cdate), day(?cdate), COUNT(?hashtag)
+SELECT (year(xsd:dateTime( str(?cdate))) AS ?y) (month(xsd:dateTime( str(?cdate))) AS ?m) (day(xsd:dateTime( str(?cdate))) AS ?d) ?hashtag (COUNT(?hashtag) AS ?hashtagcount)
 WHERE 
 {
 GRAPH <http://twitter.com/>
@@ -31,7 +33,9 @@ dcterms:created ?cdate ;
 sto:hasTag ?hashtag .
 }
 }
-GROUP BY xsd:nonNegativeInteger(year(?cdate)) xsd:nonNegativeInteger(month(?cdate)) xsd:nonNegativeInteger(day(?cdate));
+GROUP BY year(xsd:dateTime( str(?cdate))) month(xsd:dateTime( str(?cdate))) day(xsd:dateTime( str(?cdate))) ?hashtag
+ORDER BY DESC(year(xsd:dateTime( str(?cdate)))) DESC(month(xsd:dateTime( str(?cdate)))) DESC(day(xsd:dateTime( str(?cdate))))
+LIMIT 5;
 
 
 //top 10 retweeted accounts
@@ -83,6 +87,84 @@ ORDER BY DESC(?hashtags_count) LIMIT 10;
 
 
 
+//Check account similarity
+//Get hashtag counts grouped by day & hashtag
+SPARQL
+PREFIX sioc: <http://rdfs.org/sioc/ns#>
+PREFIX sto:	<https://w3id.org/i40/sto#>
+PREFIX dcterms: <http://purl.org/dc/terms/>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+SELECT (year(xsd:dateTime( str(?cdate))) AS ?y) (month(xsd:dateTime( str(?cdate))) AS ?m) (day(xsd:dateTime( str(?cdate))) AS ?d) ?user1 ?retweeted ?user2 (((COUNT(?tweet1) / ?u1_total) * (COUNT(?tweet2) / ?ru_total)) AS ?prob)
+WHERE 
+{
+GRAPH <http://twitter.com/>
+{
+?user1 sioc:creator_of ?tweet1 .
+?tweet1 sioc:type sioc:microblogPost .
+?tweet1 dcterms:created ?cdate .
+?tweet1 dcterms:references ?rttweet1 .
+?rttweet1 sioc:has_creator ?ruser .
+
+{
+SELECT COUNT(?u1_tweet) AS ?u1_total
+WHERE
+{
+?u1_tweet sioc:type sioc:microblogPost .
+?u1_tweet sioc:has_creator ?user1 .
+?u1_tweet dcterms:created ?d .
+}
+AND ?d = ?cdate
+} .
+
+?ruser sioc:creator_of ?tweet2 .
+?tweet2 sioc:type sioc:microblogPost .
+?tweet2 dcterms:references ?rttweet2 .
+?rttweet2 sioc:has_creator ?user2 .
+}
+
+{
+SELECT COUNT(?u2_tweet) AS ?ru_total
+WHERE
+{
+?u2_tweet sioc:type sioc:microblogPost .
+?u2_tweet sioc:has_creator ?ruser .
+?u2_tweet dcterms:created ?d .
+}
+AND ?d = ?cdate
+} .
+
+}
+GROUP BY year(xsd:dateTime( str(?cdate))) month(xsd:dateTime( str(?cdate))) day(xsd:dateTime( str(?cdate)))
+ORDER BY DESC(year(xsd:dateTime( str(?cdate)))) DESC(month(xsd:dateTime( str(?cdate)))) DESC(day(xsd:dateTime( str(?cdate))))
+LIMIT 5;
 
 
 
+
+//Check account similarity
+//Get hashtag counts grouped by day & hashtag
+SPARQL
+PREFIX sioc: <http://rdfs.org/sioc/ns#>
+PREFIX sto:	<https://w3id.org/i40/sto#>
+PREFIX dcterms: <http://purl.org/dc/terms/>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+SELECT (year(xsd:dateTime( str(?cdate))) AS ?y) (month(xsd:dateTime( str(?cdate))) AS ?m) (day(xsd:dateTime( str(?cdate))) AS ?d) ?user1 ?ruser ?user2
+WHERE 
+{
+GRAPH <http://twitter.com/>
+{
+?user1 sioc:creator_of ?tweet1 .
+?tweet1 sioc:type sioc:microblogPost .
+?tweet1 dcterms:created ?cdate .
+?tweet1 dcterms:references ?rttweet1 .
+?rttweet1 sioc:has_creator ?ruser .
+
+?ruser sioc:creator_of ?tweet2 .
+?tweet2 sioc:type sioc:microblogPost .
+?tweet2 dcterms:references ?rttweet2 .
+?rttweet2 sioc:has_creator ?user2 .
+}
+}
+GROUP BY year(xsd:dateTime( str(?cdate))) month(xsd:dateTime( str(?cdate))) day(xsd:dateTime( str(?cdate)))
+ORDER BY DESC(year(xsd:dateTime( str(?cdate)))) DESC(month(xsd:dateTime( str(?cdate)))) DESC(day(xsd:dateTime( str(?cdate))))
+LIMIT 5;
