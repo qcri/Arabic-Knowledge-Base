@@ -13,6 +13,17 @@ The document outline:
 
 ## Exploring the Dataset
 
+### Finding all the classes and the number of instances of each class
+
+```sparql
+SELECT ?class (count(?instance) as ?numberOfInstances) 
+WHERE {
+    ?instance a ?class .
+}
+group by ?class
+order by desc(?numberOfInstances)
+```
+
 ## Section 2
 
 ## Section 3
