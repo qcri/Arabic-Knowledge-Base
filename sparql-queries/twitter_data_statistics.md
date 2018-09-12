@@ -1,11 +1,11 @@
 # Twitter Data statistics
 ## Summary
-number of classes (entity types) = 3
-number of entities = 4,496,736
-number of relation types = 23
-number of triples = 40,584,729
+number of classes (entity types) = 3  
+number of entities = 4,496,736  
+number of relation types = 23  
+number of triples = 40,584,729  
 
-Note: All other entities like locations are treates as literal values with no properties describing them.
+Note: All other entities like locations are treated as literal values with no properties describing them.
 
 
 ## Find the number of classes (entity types) in the graph
@@ -27,7 +27,7 @@ WHERE
   }
 ```
 The query ran in 0.948 sec and returned 3.
-Note: The tweet doesn't have an ```rdf:type``` predicate in it. The excel ontology says it does. 
+Note: The tweet doesn't have the ```rdf:type``` predicate. The excel ontology says it does. It is actually has the ```sioc:type``` predicate.
 
 ## Find the number of properties (relation types) in the graph
 ```sparql
@@ -46,7 +46,7 @@ WHERE
 ```
 The query ran in 4.175 sec and returned 23 as the number of predicates currently in the database.
 
-## Find the classes in the graph and thir frequncy
+## Find the classes in the graph and thier frequncy
 ```sparql
 PREFIX  rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX  xsd:  <http://www.w3.org/2001/XMLSchema#>
@@ -162,3 +162,4 @@ WHERE
       { ?s  ?p  ?o }
   }
 ```
+The query ran in 0.076 sec and returned 40584729.
